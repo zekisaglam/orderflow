@@ -44,6 +44,19 @@ jobs:
       - name: Wait for backend to be ready
         run: npx wait-on http://localhost:3000/health --timeout 60000
 
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Start frontend
+        working-directory: frontend
+        run: |
+          nohup npm run dev > frontend.log 2>&1 &
+          disown
+
+      - name: Wait for frontend to be ready
+        run: npx wait-on http://localhost:5173 --timeout 60000
+
       - name: Install Playwright test dependencies
         working-directory: playwright-tests
         run: npm ci
@@ -59,6 +72,10 @@ jobs:
       - name: Show backend log on failure
         if: failure()
         run: cat backend/backend.log
+
+      - name: Show frontend log on failure
+        if: failure()
+        run: cat frontend/frontend.log
 
       - uses: actions/upload-artifact@v4
         if: always()
