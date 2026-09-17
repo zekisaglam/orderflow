@@ -3,6 +3,8 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import cors from 'cors';
 import campaignsRouter from './routes/campaigns';
+import { requestLogger } from './middleware/requestLogger';
+import { errorHandler } from './middleware/errorHandler';
 
 dotenv.config();
 
@@ -12,12 +14,15 @@ const mongoUri = process.env.MONGO_URI || 'mongodb://localhost:27017/orderflow';
 
 app.use(cors());
 app.use(express.json());
+app.use(requestLogger);
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok' });
 });
 
 app.use('/campaigns', campaignsRouter);
+
+app.use(errorHandler);
 
 mongoose
   .connect(mongoUri)
