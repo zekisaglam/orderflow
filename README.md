@@ -41,27 +41,28 @@ The core problem it's built around: **a client must never be able to see or crea
 `backend/` — Express + TypeScript, MongoDB via Mongoose.
 
 - **Data model**: a `Campaign` (`src/models/Campaign.ts`) belongs to exactly one `clientId` and tracks `name`, `budget`, `impressions`, and `clicks`.
-- **RBAC middleware** (`src/middleware/auth.ts`): every request carries an `x-user-role` header (`admin`, `clientA`, or `clientB`) and an `x-client-id` header. The middleware attaches `{ role, clientId }` to `req.user` and rejects requests with no role (`401`).
+- **RBAC middleware** (`src/middleware/auth.ts`): every request carries an `x-user-role` header (`admin`, or one of five client roles — `clientA` through `clientE`) and an `x-client-id` header. The middleware attaches `{ role, clientId }` to `req.user` and rejects requests with no role (`401`).
 - **Routes** (`src/routes/campaigns.ts`):
   - `POST /campaigns` — always forces `clientId` from the authenticated user, ignoring anything sent in the request body. This is the actual enforcement point: a client cannot create data under another client's ID no matter what the request body claims.
   - `GET /campaigns` — admins see every campaign; clients only see campaigns filtered to their own `clientId`.
 - **Error handling**: route-level try/catch for expected failures (e.g. Mongoose validation) plus a global Express error-handling middleware (`src/middleware/errorHandler.ts`) that catches anything unhandled (e.g. a database outage) and returns a clean `500` instead of crashing the process.
+- **Seed data** (`src/seed.ts`): wipes the `campaigns` collection and inserts a realistic demo dataset — 92 campaigns spread across 5 clients, each representing a distinct business type (`clientA`: e-commerce/retail, `clientB`: B2B SaaS, `clientC`: restaurant/food chain, `clientD`: fitness/wellness app, `clientE`: local home services), with varied non-round budgets, impressions/clicks that produce realistic click-through rates (0.5–4%) rather than a fixed formula, and creation dates spread across the last 4 months.
 
 ### Frontend
 
 `frontend/` — React + TypeScript, built with Vite.
 
-- A minimal login screen (`App.tsx`) lets you pick a role from a dropdown and "log in" — this simulates auth without a real session system, since the focus of this project is the RBAC enforcement itself, not authentication.
-- A `Dashboard` component (`Dashboard.tsx`) fetches and creates campaigns against the backend, sending the selected role/clientId as headers on every request, and renders the results in a table with loading and error states.
+- A login screen (`App.tsx`) lets you pick a role from a dropdown — `admin` or any of the five client personas — and "log in" and "log out" — this simulates auth without a real session system, since the focus of this project is the RBAC enforcement itself, not authentication. It's styled with **Tailwind CSS** as a centered card on a light background, in line with the dashboard's look.
+- A `Dashboard` component (`Dashboard.tsx`) fetches and creates campaigns against the backend, sending the selected role/clientId as headers on every request. It's built as a modern, light SaaS-style UI: a header bar with a role/client badge and logout button, a row of summary stat cards (Total Campaigns, Total Budget, Average CTR — all computed client-side from the fetched data), a styled campaigns table (currency-formatted budget, right-aligned numeric columns, a computed CTR column, alternating row shading), and a card-based create-campaign form with labeled inputs — all with loading and error states.
 
 ### Testing
 
 `playwright-tests/` — Playwright, covering the RBAC guarantee at two different levels:
 
-- **API-level** (`tests/rbac.spec.ts`) — uses Playwright's `request` fixture to hit the backend directly: verifies a missing auth header returns `401`, a spoofed `clientId` in a request body gets overridden server-side, and a client's `GET /campaigns` never returns another client's data.
-- **UI-level** (`tests/rbac-ui.spec.ts`) — drives the real running frontend through a **Page Object Model** (`tests/pages/DashboardPage.ts`, exposing `login()` and `getCampaignNames()`), seeding known campaigns via the API and asserting on what each role actually sees rendered in the browser.
+- **API-level** (`tests/rbac.spec.ts`, 3 tests) — uses Playwright's `request` fixture to hit the backend directly: verifies a missing auth header returns `401`, a spoofed `clientId` in a request body gets overridden server-side, and a client's `GET /campaigns` never returns another client's data.
+- **UI-level** (`tests/rbac-ui.spec.ts`, 3 tests) — drives the real running frontend through a **Page Object Model** (`tests/pages/DashboardPage.ts`, exposing `login()` and `getCampaignNames()`), seeding known campaigns via the API and asserting on what each role actually sees rendered in the browser.
 
-Testing the same guarantee at both the API and UI level is deliberate: it protects against both "the backend leaks data" and "the backend is correct but the UI accidentally shows the wrong thing."
+6 tests total (the suite no longer carries the default `create-playwright` scaffolding test). Testing the same guarantee at both the API and UI level is deliberate: it protects against both "the backend leaks data" and "the backend is correct but the UI accidentally shows the wrong thing."
 
 ### CI/CD
 
@@ -147,7 +148,16 @@ npx ts-node src/server.ts
 
 Runs on `http://localhost:3000`. Requires a `.env` file with `MONGO_URI` and `ELASTICSEARCH_NODE` (see `backend/.env`).
 
-**4. Start the frontend**
+**4. Seed realistic demo data**
+
+```bash
+cd backend
+npx ts-node src/seed.ts
+```
+
+Wipes the `campaigns` collection and inserts the 92-campaign demo dataset across all 5 clients (see [Seed data](#backend) above). Safe to re-run any time you want to reset to a clean demo state.
+
+**5. Start the frontend**
 
 ```bash
 cd frontend
@@ -157,7 +167,7 @@ npm run dev
 
 Runs on `http://localhost:5173`.
 
-**5. Run the Playwright tests**
+**6. Run the Playwright tests**
 
 ```bash
 cd playwright-tests
@@ -165,9 +175,9 @@ npm install
 npx playwright test
 ```
 
-Requires the backend and frontend from steps 3–4 to already be running.
+Requires the backend and frontend from steps 3 and 5 to already be running.
 
-**6. Run the triage agent eval**
+**7. Run the triage agent eval**
 
 ```bash
 cd triage-agent
