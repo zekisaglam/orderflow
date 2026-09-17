@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 
-export type UserRole = 'admin' | 'clientA' | 'clientB';
+export type UserRole = 'admin' | 'clientA' | 'clientB' | 'clientC' | 'clientD' | 'clientE';
 
 export function authenticate(req: Request, res: Response, next: NextFunction) {
   const role = req.header('x-user-role') as UserRole | undefined;
