@@ -31,4 +31,14 @@ test.describe('Campaign RBAC', () => {
     const campaigns = await response.json();
     expect(campaigns.every((c: { clientId: string }) => c.clientId !== 'clientB')).toBeTruthy();
   });
+
+  test('clientC only sees its own campaigns via GET /campaigns', async ({ request }) => {
+    const response = await request.get(`${baseURL}/campaigns`, {
+      headers: { 'x-user-role': 'clientC', 'x-client-id': 'clientC' },
+    });
+
+    expect(response.ok()).toBeTruthy();
+    const campaigns = await response.json();
+    expect(campaigns.every((c: { clientId: string }) => c.clientId === 'clientC')).toBeTruthy();
+  });
 });

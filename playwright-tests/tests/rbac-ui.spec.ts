@@ -5,6 +5,7 @@ const apiBaseURL = 'http://localhost:3000';
 
 let clientACampaignName: string;
 let clientBCampaignName: string;
+let clientCCampaignName: string;
 
 async function createCampaign(request: APIRequestContext, role: string, name: string) {
   const response = await request.post(`${apiBaseURL}/campaigns`, {
@@ -19,9 +20,11 @@ test.beforeAll(async ({ playwright }) => {
   const suffix = Date.now();
   clientACampaignName = `ClientA Only Campaign ${suffix}`;
   clientBCampaignName = `ClientB Only Campaign ${suffix}`;
+  clientCCampaignName = `ClientC Only Campaign ${suffix}`;
 
   await createCampaign(request, 'clientA', clientACampaignName);
   await createCampaign(request, 'clientB', clientBCampaignName);
+  await createCampaign(request, 'clientC', clientCCampaignName);
 
   await request.dispose();
 });
@@ -44,6 +47,17 @@ test('clientB sees only its own campaigns', async ({ page }) => {
   const names = await dashboard.getCampaignNames();
   expect(names).toContain(clientBCampaignName);
   expect(names).not.toContain(clientACampaignName);
+});
+
+test('clientC sees only its own campaigns', async ({ page }) => {
+  const dashboard = new DashboardPage(page);
+  await dashboard.goto();
+  await dashboard.login('clientC');
+
+  const names = await dashboard.getCampaignNames();
+  expect(names).toContain(clientCCampaignName);
+  expect(names).not.toContain(clientACampaignName);
+  expect(names).not.toContain(clientBCampaignName);
 });
 
 test('admin sees campaigns from multiple clients', async ({ page }) => {

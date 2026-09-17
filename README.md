@@ -59,10 +59,10 @@ The core problem it's built around: **a client must never be able to see or crea
 
 `playwright-tests/` — Playwright, covering the RBAC guarantee at two different levels:
 
-- **API-level** (`tests/rbac.spec.ts`, 3 tests) — uses Playwright's `request` fixture to hit the backend directly: verifies a missing auth header returns `401`, a spoofed `clientId` in a request body gets overridden server-side, and a client's `GET /campaigns` never returns another client's data.
-- **UI-level** (`tests/rbac-ui.spec.ts`, 3 tests) — drives the real running frontend through a **Page Object Model** (`tests/pages/DashboardPage.ts`, exposing `login()` and `getCampaignNames()`), seeding known campaigns via the API and asserting on what each role actually sees rendered in the browser.
+- **API-level** (`tests/rbac.spec.ts`, 4 tests) — uses Playwright's `request` fixture to hit the backend directly: verifies a missing auth header returns `401`, a spoofed `clientId` in a request body gets overridden server-side, a client's `GET /campaigns` never returns another client's data, and (with a third client) that `clientC` only ever sees its own campaigns.
+- **UI-level** (`tests/rbac-ui.spec.ts`, 4 tests) — drives the real running frontend through a **Page Object Model** (`tests/pages/DashboardPage.ts`, exposing `login()` and `getCampaignNames()`), seeding known campaigns via the API and asserting on what each role actually sees rendered in the browser — `clientA`, `clientB`, and `clientC` each see only their own campaigns, and `admin` sees across all of them.
 
-6 tests total (the suite no longer carries the default `create-playwright` scaffolding test). Testing the same guarantee at both the API and UI level is deliberate: it protects against both "the backend leaks data" and "the backend is correct but the UI accidentally shows the wrong thing."
+8 tests total (the suite no longer carries the default `create-playwright` scaffolding test). Testing the same guarantee at both the API and UI level, and across three distinct clients rather than just two, is deliberate: it protects against both "the backend leaks data" and "the backend is correct but the UI accidentally shows the wrong thing," and guards against a fix that happens to work for one client pair by coincidence.
 
 ### CI/CD
 

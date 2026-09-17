@@ -1,11 +1,7 @@
 {
   "name": "triage-agent",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "description": "LangGraph + Claude agent that classifies failing Orderflow tests using surrounding Elasticsearch logs.",
   "keywords": [],
   "author": "",
   "license": "ISC",

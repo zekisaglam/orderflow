@@ -2,6 +2,7 @@
   "name": "frontend",
   "private": true,
   "version": "0.0.0",
+  "description": "React + Tailwind dashboard for Orderflow campaign management, with role-based login.",
   "type": "module",
   "scripts": {
     "dev": "vite",

@@ -1,11 +1,7 @@
 {
   "name": "backend",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
+  "description": "Express + MongoDB API for Orderflow, enforcing per-client RBAC and shipping structured request logs to Elasticsearch.",
   "keywords": [],
   "author": "",
   "license": "ISC",

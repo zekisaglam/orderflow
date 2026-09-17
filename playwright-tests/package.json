@@ -1,7 +1,7 @@
 {
   "name": "playwright-tests",
   "version": "1.0.0",
-  "description": "",
+  "description": "API and UI Playwright test suite verifying Orderflow's per-client RBAC guarantees.",
   "main": "index.js",
   "scripts": {},
   "keywords": [],
