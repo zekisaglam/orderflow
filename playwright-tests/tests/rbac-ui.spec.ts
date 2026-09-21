@@ -6,6 +6,7 @@ const apiBaseURL = 'http://localhost:3000';
 let clientACampaignName: string;
 let clientBCampaignName: string;
 let clientCCampaignName: string;
+const createdCampaignIds: string[] = [];
 
 async function createCampaign(request: APIRequestContext, role: string, name: string) {
   const response = await request.post(`${apiBaseURL}/campaigns`, {
@@ -13,6 +14,8 @@ async function createCampaign(request: APIRequestContext, role: string, name: st
     data: { name, budget: 100 },
   });
   expect(response.ok()).toBeTruthy();
+  const campaign = await response.json();
+  createdCampaignIds.push(campaign._id);
 }
 
 test.beforeAll(async ({ playwright }) => {
@@ -26,6 +29,17 @@ test.beforeAll(async ({ playwright }) => {
   await createCampaign(request, 'clientB', clientBCampaignName);
   await createCampaign(request, 'clientC', clientCCampaignName);
 
+  await request.dispose();
+});
+
+test.afterAll(async ({ playwright }) => {
+  const request = await playwright.request.newContext();
+  for (const id of createdCampaignIds) {
+    await request.delete(`${apiBaseURL}/campaigns/${id}`, {
+      headers: { 'x-user-role': 'admin' },
+    });
+  }
+  createdCampaignIds.length = 0;
   await request.dispose();
 });
 

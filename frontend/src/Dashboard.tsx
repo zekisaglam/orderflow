@@ -63,14 +63,14 @@ function Dashboard({ role, clientId, onLogout }: DashboardProps) {
     setLoading(true);
     setError(null);
 
-    return fetch('http://localhost:3000/campaigns', { headers: authHeaders() })
+    return fetch('http://localhost:3000/campaigns?limit=100', { headers: authHeaders() })
       .then((res) => {
         if (!res.ok) {
           throw new Error(`Request failed with status ${res.status}`);
         }
         return res.json();
       })
-      .then((data) => setCampaigns(data))
+      .then((data) => setCampaigns(data.campaigns))
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
   }, [authHeaders]);
